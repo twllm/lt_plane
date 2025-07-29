@@ -2,7 +2,7 @@ import factory
 from uuid import uuid4
 from django.utils import timezone
 
-from plane.db.models import User, Workspace, WorkspaceMember, Project, ProjectMember
+from plane.db.models import User, Workspace, WorkspaceMember, Project, ProjectMember, State
 
 
 class UserFactory(factory.django.DjangoModelFactory):
@@ -79,3 +79,26 @@ class ProjectMemberFactory(factory.django.DjangoModelFactory):
     role = 20  # Admin role by default
     created_at = factory.LazyFunction(timezone.now)
     updated_at = factory.LazyFunction(timezone.now)
+
+
+class StateFactory(factory.django.DjangoModelFactory):
+    """Factory for creating State instances"""
+
+    class Meta:
+        model = State
+        django_get_or_create = ("name", "project")
+
+    id = factory.LazyFunction(uuid4)
+    name = factory.Sequence(lambda n: f"State {n}")
+    description = factory.Faker("text", max_nb_chars=200)
+    color = factory.Faker("hex_color")
+    group = factory.Iterator(["backlog", "unstarted", "started", "completed", "cancelled"])
+    sequence = factory.Sequence(lambda n: n * 1000)
+    project = factory.SubFactory(ProjectFactory)
+    workspace = factory.SelfAttribute("project.workspace")
+    created_by = factory.SelfAttribute("project.created_by")
+    updated_by = factory.SelfAttribute("project.created_by")
+    created_at = factory.LazyFunction(timezone.now)
+    updated_at = factory.LazyFunction(timezone.now)
+    default = False
+    is_triage = False
